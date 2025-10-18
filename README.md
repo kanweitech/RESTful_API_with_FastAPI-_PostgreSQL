@@ -14,3 +14,10 @@ cd <your_project>
 python -m venv venv
 venv\Scripts\activate
 ```
+
+## Installing the necessary dependencies
+Run the following command to download and install the required dependencies.
+
+```
+pip install fastapi uvicorn sqlalchemy psycopg2-binary python-dotenv
+```
