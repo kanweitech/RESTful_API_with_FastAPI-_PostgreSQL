@@ -21,3 +21,13 @@ Run the following command to download and install the required dependencies.
 ```
 pip install fastapi uvicorn sqlalchemy psycopg2-binary python-dotenv
 ```
+
+### Database Configuration
+We will now create a file called `database.py` which will hold the necessary boiler plate code to establish a connection to our local PostgreSQL database and establish session management.
+
+It imports the create_engine module which helps to create a database engine and establish connection to the database.
+
+It also imports the sessionmaker module which helps in creating the database session objects. Also, declarative_base module is imported which helps in creating ORM models.
+Next, we configure the database URL and create the database engine from the database connection.
+Then we are creating a SessionLocal with `autocommit=false` means that commits will have to be done manually explicitly and `autoflush=false` means automatic flushing of changes to the database before queries.
+Note: This SessionLocal will be instantiated later to access the database. Finally we create a Base class from which all ORM models will inherit.
