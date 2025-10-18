@@ -194,3 +194,9 @@ db.delete(user)
     return user
 ```
 _`Delete` the user and return the deleted record._
+
+### Running the Application and Interactive Documents
+_To run the app, from your terminal, run the following command:_
+```
+uvicorn main:app --reload
+```
