@@ -7,3 +7,10 @@ Run the following commands sequentially to have the project directory and enviro
 It first creates a directory using mkdir (stands for make directory) command and then navigates into the created folder. Next, it creates a virtual environment and activates the scripts on it.
 
 The below script is for Windows compatible machine. For Linux/Unix/Mac, try running the last command as: _source venv/bin/activate_
+
+```
+mkdir <your_project>
+cd <your_project>
+python -m venv venv
+venv\Scripts\activate
+```
