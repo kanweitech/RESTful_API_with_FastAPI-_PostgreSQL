@@ -36,12 +36,12 @@ Note: This SessionLocal will be instantiated later to access the database. Final
 _Make sure to replace the username and password in the DATABASE_URL section._
 
 ### Defining Models & Schemas
-First, create a `model.py` file. This will create a table called Users. 
+First, create a `models.py` file. This will create a table called Users. 
 
 Import the Base class (created with declarative_base()) in the previous boiler plate code, which is the base class for all ORM models.
 Next, define a new ORM model class named User that inherits from Base.
 
-__tablename__ = "users" : Specifies the name of the database table this model maps to — "users".
+`__tablename__ = "users"` : Specifies the name of the database table this model maps to — "users".
 Next, define the columns with their datatype and constraints mentioned.
 
 Next, create a `schemas.py` file.
@@ -107,5 +107,90 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 ```
 _Defines a `POST` route to /users/.
 Takes user as input, validated against UserCreate schema.
-Injects a DB session using Depends(get_db)._
+Injects a DB session using `Depends(get_db).`_
 
+```
+db_user = models.User(**user.dict())
+```
+Creates a SQLAlchemy User model instance from the input Pydantic model.
+```
+db.add(db_user)  # Add to session
+    db.commit()      # Commit the transaction to DB
+    db.refresh(db_user)  # Refresh to get the latest state (like auto-generated ID)
+    return db_user
+```
+_Saves the user to the database and returns the created user.
+GET Endpoint understanding to retrieve all users:_
+```
+@app.get("/users/", response_model=List[schemas.User])
+def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+```
+_`GET` route that lists all users with optional pagination.
+skip and limit are query parameters. It will skip no records and pickup from the first record and maximum 100 will be picked in a set.
+Injects DB session._
+```
+return db.query(models.User).offset(skip).limit(limit).all()
+```
+Runs a SQL query to get users with pagination.
+`GET` Endpoint understanding to get a specific user:
+```
+@app.get("/users/{user_id}", response_model=schemas.User)
+def read_user(user_id: int, db: Session = Depends(get_db)):
+```
+`GET` route to get a specific user by ID.
+`user_id` is passed as a path parameter.
+```
+user = db.query(models.User).filter(models.User.id == user_id).first()
+```
+_Looks for a user with the given ID._
+```
+if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+```
+_If user doesn't exist, raise 404 error. Otherwise, return the user.
+`PUT` Endpoint understanding to update a specific user:_
+```
+@app.put("/users/{user_id}", response_model=schemas.User)
+def update_user(user_id: int, user: schemas.UserBase, db: Session = Depends(get_db)):
+```
+_`PUT` route to update a user.
+Accepts user_id as path param and a UserBase body (with updated fields)._
+```
+db_user = db.query(models.User).filter(models.User.id == user_id).first()
+```
+_Fetch the existing user. It tries to match with the user_id passed and in case there are users with duplicate user_id (which ideally should not happen), then only the first matching record will be fetched._
+```
+if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+```
+_If user doesn't exists with the user_id mentioned, then an exception will be raised with status code as 404 and appropriate error message._
+```
+for key, value in user.dict().items():
+        setattr(db_user, key, value)
+```
+_Dynamically update each field in the user object._
+```
+db.commit()
+    db.refresh(db_user)
+    return db_user
+```
+_Save changes and return updated user.
+`DELETE` Endpoint understanding to delete a specific user:_
+```
+@app.delete("/users/{user_id}", response_model=schemas.User)
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+```
+_`DELETE` route to remove a user by ID. The user with the specific path parameter user_id mentioned will be deleted, if available._
+```
+user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+```
+_Look up for the user with the user_id mentioned. If user is not found with this user_id, return an exception with status code as 404 and appropriate error message._
+```
+db.delete(user)
+    db.commit()
+    return user
+```
+_`Delete` the user and return the deleted record._
